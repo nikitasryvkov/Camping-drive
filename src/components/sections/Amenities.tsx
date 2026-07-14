@@ -7,22 +7,22 @@ import { SectionHeading } from "../SectionHeading";
 const icons = [Wifi, UsersRound, ShowerHead, Bath, Droplets, GlassWater, Armchair, Flame, Utensils, Car, TentTree, Soup, Bath, Flame, Wrench, Map, Bike, Trees];
 
 const amenityImages = [
-  "/media/stay-glamping-day.webp",
-  "/media/gallery-06-640.webp",
-  "/media/activity-sup.webp",
-  "/media/activity-bath.webp",
-  "/media/gallery-03-640.webp",
-  "/media/activity-kayak.webp",
-  "/media/gallery-08-640.webp",
-  "/media/activity-campfire.webp",
-  "/media/stay-own-tent-day.webp",
-  "/media/gallery-07-640.webp",
-  "/media/territory-main.webp",
-  "/media/gallery-08-640.webp",
-  "/media/activity-bath.webp",
-  "/media/activity-bath.webp",
-  "/media/activity-quad.webp",
-  "/media/final-day.webp",
+  "/media/amenities/wifi.webp",
+  "/media/amenities/shared-toilets.webp",
+  "/media/amenities/summer-showers.webp",
+  "/media/amenities/kids-warm-shower.webp",
+  "/media/amenities/utility-water.webp",
+  "/media/amenities/drinking-water.webp",
+  "/media/amenities/tables-benches.webp",
+  "/media/amenities/campfire.webp",
+  "/media/amenities/brazier.webp",
+  "/media/amenities/parking.webp",
+  "/media/amenities/staff-24-7.webp",
+  "/media/amenities/breakfast-drinks.webp",
+  "/media/amenities/bathhouse.webp",
+  "/media/amenities/siberian-hot-tub.webp",
+  "/media/amenities/equipment-rental.webp",
+  "/media/amenities/route-transfer.webp",
 ] as const;
 
 export function Amenities() {
