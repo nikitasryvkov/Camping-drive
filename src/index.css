@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 38% 96%;
+  --foreground: 150 30% 12%;
+  --muted-foreground: 145 11% 39%;
+  --border: 42 20% 82%;
+  --surface: 42 32% 92%;
+  --surface-strong: 44 28% 87%;
+  --accent: 198 66% 45%;
+  --accent-foreground: 0 0% 100%;
+  --forest: 126 57% 35%;
+  --fire: 28 92% 58%;
+  --font-display: "Prata", serif;
+  --font-body: "Manrope", sans-serif;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="night"] { color-scheme: dark; }
+
+html {
+  scroll-behavior: smooth;
+  background: hsl(var(--background));
+  scroll-padding-top: 84px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: clip;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-body);
+  font-size: 16px;
+  transition: background-color 500ms ease, color 500ms ease;
+}
+
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+img { display: block; }
+::selection { background: hsl(var(--fire) / .35); }
+
+@layer components {
+  .section-space { @apply py-20 sm:py-24 lg:py-32; }
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[.2em] text-muted; }
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 700ms ease, transform 700ms cubic-bezier(.2,.8,.2,1); }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+}
+
+section, footer, header, div, article, input, select, textarea {
+  border-color: hsl(var(--border));
+}
+
+.hero-enter { animation: hero-enter 900ms 160ms both cubic-bezier(.2,.8,.2,1); }
+@keyframes hero-enter { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+.marquee-track { animation: marquee 32s linear infinite; }
+.marquee-track:hover { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+.territory-map::before {
+  content: "";
+  position: absolute;
+  inset: 18% 20%;
+  border: 1px dashed hsl(var(--forest) / .55);
+  border-radius: 48% 52% 40% 60%;
+  transform: rotate(-8deg);
+}
+
+.territory-map::after {
+  content: "";
+  position: absolute;
+  left: 15%;
+  right: 8%;
+  bottom: 24%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, hsl(var(--accent) / .7));
+  transform: rotate(12deg);
+}
+
+@media (max-width: 767px) {
+  .section-space { padding-top: 4.5rem; padding-bottom: 4.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+  .marquee-track { animation: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}

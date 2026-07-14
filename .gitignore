@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.asset-source/
+day.mp4
+night.mp4
+.vite-out.log
+.vite-err.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
