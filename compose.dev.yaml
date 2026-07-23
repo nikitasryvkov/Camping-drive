@@ -1,0 +1,7 @@
+services:
+  db:
+    ports:
+      - "127.0.0.1:${PGPORT:-5432}:5432"
+    networks:
+      - database
+      - host_access

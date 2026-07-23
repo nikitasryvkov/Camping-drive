@@ -1,0 +1,22 @@
+name: camping-drive-stage9
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
+    image: camping-drive-postgres:stage9
+    environment:
+      POSTGRES_DB: camping_drive_stage9_test
+      POSTGRES_USER: camping_drive_stage9
+      POSTGRES_PASSWORD: stage9-local-test-password
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camping_drive_stage9 -d camping_drive_stage9_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    tmpfs:
+      - /var/lib/postgresql/data

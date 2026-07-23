@@ -1,19 +1,19 @@
-camping.drivebro.ru {
-    encode zstd gzip
+{$SITE_DOMAIN} {
+	encode zstd gzip
 
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        -Server
-    }
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
 
-    reverse_proxy app:80 {
-        health_uri /healthz
-        health_interval 30s
-        health_timeout 5s
-    }
+	reverse_proxy frontend:8080 {
+		health_uri /healthz
+		health_interval 30s
+		health_timeout 5s
+	}
 
-    log {
-        output stdout
-        format console
-    }
+	log {
+		output stdout
+		format console
+	}
 }

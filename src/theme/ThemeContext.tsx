@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { palettes, type Theme } from "./palettes";
 
@@ -17,10 +17,14 @@ const STORAGE_KEY = "kemping-drive-theme";
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const prefersReduced = useReducedMotion();
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved === "night" ? "night" : "day";
+    try {
+      return localStorage.getItem(STORAGE_KEY) === "night" ? "night" : "day";
+    } catch {
+      return "day";
+    }
   });
   const [phase, setPhase] = useState<TransitionPhase>("idle");
+  const timers = useRef<Set<number>>(new Set());
 
   const applyTheme = useCallback((next: Theme) => {
     const root = document.documentElement;
@@ -31,8 +35,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     applyTheme(theme);
-    localStorage.setItem(STORAGE_KEY, theme);
+    try {
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      // Storage can be disabled by browser privacy settings; the in-memory theme still works.
+    }
   }, [applyTheme, theme]);
+
+  useEffect(() => () => {
+    timers.current.forEach((timer) => window.clearTimeout(timer));
+    timers.current.clear();
+  }, []);
 
   const toggleTheme = useCallback(() => {
     if (phase !== "idle") return;
@@ -42,11 +55,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setPhase("out");
-    window.setTimeout(() => {
+    const outerTimer = window.setTimeout(() => {
+      timers.current.delete(outerTimer);
       setTheme(next);
       setPhase("in");
-      window.setTimeout(() => setPhase("idle"), 650);
+      const innerTimer = window.setTimeout(() => {
+        timers.current.delete(innerTimer);
+        setPhase("idle");
+      }, 650);
+      timers.current.add(innerTimer);
     }, 250);
+    timers.current.add(outerTimer);
   }, [phase, prefersReduced, theme]);
 
   const value = useMemo(
