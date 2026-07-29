@@ -150,7 +150,12 @@ docker compose --env-file "$env_file" -f "$compose_file" exec -T \
   -e PGPASSWORD=dr-monitor-password-for-isolated-test db \
   psql --host=127.0.0.1 --username=dr_monitor --dbname=camping_drive_dr \
   --tuples-only --no-align --command="SELECT current_user" | grep -qx dr_monitor
-curl --fail --silent --show-error http://127.0.0.1:18080/healthz | grep -q '"status":"ready"'
+if [ "$managed_edge" = true ]; then
+  docker compose --env-file "$env_file" -f "$compose_file" exec -T frontend \
+    wget -qO- http://127.0.0.1:8080/healthz | grep -q '"status":"ready"'
+else
+  curl --fail --silent --show-error http://127.0.0.1:18080/healthz | grep -q '"status":"ready"'
+fi
 docker compose --env-file "$env_file" -f "$compose_file" run --rm -T --no-deps \
   --entrypoint sh caddy -eu -c \
   'test "$(cat /data/dr-sentinel)" = caddy-data-before-backup; test "$(cat /config/dr-sentinel)" = caddy-config-before-backup; test "$(stat -c "%u:%g" /data/dr-sentinel)" = 10001:10001; test "$(stat -c "%u:%g" /config/dr-sentinel)" = 10001:10001'
