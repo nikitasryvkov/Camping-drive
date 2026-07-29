@@ -108,7 +108,9 @@ test.describe.serial("этап 9: административные сценар�
     await expect(blockCards.nth(0)).toContainText(BLOCK_DEFINITIONS[1]!.label);
     await expect(blockCards.nth(1)).toContainText(BLOCK_DEFINITIONS[0]!.label);
 
-    await blockCards.nth(2).locator(".admin-block-drag").dragTo(blockCards.nth(0));
+    await blockCards.nth(2).getByRole("button", { name: "Поднять блок" }).click();
+    await expect(blockCards.nth(1)).toContainText(BLOCK_DEFINITIONS[2]!.label);
+    await blockCards.nth(1).getByRole("button", { name: "Поднять блок" }).click();
     await expect(blockCards.nth(0)).toContainText(BLOCK_DEFINITIONS[2]!.label);
 
     await page.getByRole("button", { name: "Опубликовать" }).click();
