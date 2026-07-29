@@ -266,7 +266,7 @@ services:
     image: camping-drive-caddy:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
     restart: unless-stopped
     environment:
-      SITE_DOMAIN: ${SITE_DOMAIN:-camping.drivebro.ru}
+      SITE_DOMAIN: ${SITE_DOMAIN:-kemping-drive.ru}
     depends_on:
       frontend:
         condition: service_healthy
