@@ -161,7 +161,7 @@ docker compose --env-file "$env_file" -f "$compose_file" run --rm -T --no-deps \
   'test "$(cat /data/dr-sentinel)" = caddy-data-before-backup; test "$(cat /config/dr-sentinel)" = caddy-config-before-backup; test "$(stat -c "%u:%g" /data/dr-sentinel)" = 10001:10001; test "$(stat -c "%u:%g" /config/dr-sentinel)" = 10001:10001'
 
 if [ "$managed_edge" = true ]; then
-  sh scripts/compose-mutation.sh start-traffic
+  docker compose --env-file "$env_file" -f "$compose_file" up -d --wait --no-build --pull never caddy
   caddy_container=$(docker compose --env-file "$env_file" -f "$compose_file" ps -q caddy)
   test -n "$caddy_container"
   test "$(docker inspect --format '{{.Config.User}}|{{.State.Health.Status}}' "$caddy_container")" = "10001:10001|healthy"
