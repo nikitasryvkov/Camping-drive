@@ -1,22 +1,257 @@
 name: camping-drive
 
+x-release-metadata:
+  commit: ${RELEASE_COMMIT:-unverified}
+  manifest-sha256: ${RELEASE_MANIFEST_SHA256:-unverified}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
-  app:
+  db:
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
+      args:
+        VCS_REF: ${RELEASE_COMMIT:-unverified}
+    image: camping-drive-postgres:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-camping_drive}
+      POSTGRES_USER: ${POSTGRES_USER:-camping_drive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/run/postgresql:size=16m,mode=0775
+      - /tmp:size=64m,mode=1777
+    mem_limit: 1g
+    cpus: 1.5
+    pids_limit: 256
+    logging: *default-logging
+
+  migrate:
+    image: camping-drive-backend:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
+    restart: "no"
+    command: ["node", "server/dist/migrate.js"]
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: production
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-camping_drive}
+      PGUSER: ${POSTGRES_USER:-camping_drive}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local}
+      APP_DB_USER: ${APP_DB_USER:-camping_drive_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env.local}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?Set PUBLIC_SITE_URL in .env.local}
+      PUBLIC_INDEX_PATH: /app/public/index.html
+      PUBLIC_ORIGINS: ${PUBLIC_ORIGINS:?Set PUBLIC_ORIGINS in .env.local}
+    networks:
+      - database
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    logging: *default-logging
+
+  admin-create:
+    image: camping-drive-backend:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
+    profiles: ["maintenance"]
+    restart: "no"
+    command: ["node", "server/dist/create-administrator.js"]
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: production
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-camping_drive}
+      PGUSER: ${POSTGRES_USER:-camping_drive}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local}
+      APP_DB_USER: ${APP_DB_USER:-camping_drive_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env.local}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?Set PUBLIC_SITE_URL in .env.local}
+      PUBLIC_INDEX_PATH: /app/public/index.html
+      PUBLIC_ORIGINS: ${PUBLIC_ORIGINS:?Set PUBLIC_ORIGINS in .env.local}
+    networks:
+      - database
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    logging: *default-logging
+
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
+      target: backend-runtime
       args:
-        VITE_SITE_URL: https://camping.drivebro.ru
-        VITE_WEB3FORMS_ACCESS_KEY: ${VITE_WEB3FORMS_ACCESS_KEY:?Set VITE_WEB3FORMS_ACCESS_KEY in .env.local}
-        VITE_YANDEX_METRIKA_ID: ${VITE_YANDEX_METRIKA_ID:-}
-    image: camping-drive:${IMAGE_TAG:-latest}
+        VITE_SITE_URL: ${VITE_SITE_URL:?Set VITE_SITE_URL in .env.local}
+        VCS_REF: ${RELEASE_COMMIT:-unverified}
+    image: camping-drive-backend:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:${APP_PORT:-8080}:80"
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_TOPOLOGY: external-edge
+      PORT: 3000
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-camping_drive}
+      PGUSER: ${APP_DB_USER:-camping_drive_app}
+      PGPASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env.local}
+      UPLOADS_DIR: /app/uploads/current
+      PUBLIC_INDEX_PATH: /app/public/index.html
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?Set PUBLIC_SITE_URL in .env.local}
+      PUBLIC_ORIGINS: ${PUBLIC_ORIGINS:?Set PUBLIC_ORIGINS in .env.local}
+      IMAGE_MAX_UPLOAD_MB: ${IMAGE_MAX_UPLOAD_MB:-15}
+      IMAGE_MAX_INPUT_MEGAPIXELS: ${IMAGE_MAX_INPUT_MEGAPIXELS:-40}
+      IMAGE_PROCESSING_CONCURRENCY: ${IMAGE_PROCESSING_CONCURRENCY:-1}
+      ADMIN_SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-12}
+      PASSWORD_VERIFICATION_CONCURRENCY: ${PASSWORD_VERIFICATION_CONCURRENCY:-1}
+      TRUST_PROXY_HOPS: 2
+    volumes:
+      - uploads_data:/app/uploads
+    expose:
+      - "3000"
+    networks:
+      - database
+      - application
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     security_opt:
       - no-new-privileges:true
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 192
+    stop_grace_period: 15s
+    logging: *default-logging
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-runtime
+      args:
+        VITE_SITE_URL: ${VITE_SITE_URL:?Set VITE_SITE_URL in .env.local}
+        VCS_REF: ${RELEASE_COMMIT:-unverified}
+    image: camping-drive-frontend:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:8080"
+    networks:
+      - application
+      - host_access
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/cache/nginx:size=32m,mode=0755
+      - /var/run:size=4m,mode=0755
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 96
+    logging: *default-logging
+
+  caddy:
+    image: camping-drive-caddy:${IMAGE_TAG:?Set an immutable IMAGE_TAG in .env.local}
+    profiles: ["caddy-state-test"]
+    restart: "no"
+    entrypoint: ["sh", "-c"]
+    command: ["trap 'exit 0' TERM INT; while :; do sleep 3600 & wait $$!; done"]
+    environment:
+      SITE_DOMAIN: dr.invalid
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - host_access
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
+    logging: *default-logging
+
+networks:
+  database:
+    driver: bridge
+    internal: true
+  application:
+    driver: bridge
+    internal: true
+  host_access:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.254.12.0/24
+
+volumes:
+  postgres_data:
+  uploads_data:
+  caddy_data:
+  caddy_config:

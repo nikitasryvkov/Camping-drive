@@ -1,17 +1,11 @@
 import { Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "../theme/ThemeContext";
-import { track } from "../lib/analytics";
 import { cn } from "../lib/utils";
 
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const { theme, toggleTheme, phase, reducedMotion } = useTheme();
   const night = theme === "night";
-
-  const handleToggle = () => {
-    track("theme_toggle", { from: theme, to: night ? "day" : "night" });
-    toggleTheme();
-  };
 
   return (
     <div className={cn("flex flex-col items-center gap-2", compact && "gap-0")}>
@@ -21,7 +15,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
         aria-checked={night}
         aria-label={night ? "Вернуться в дневную тему" : "Переключить на ночную тему"}
         disabled={phase !== "idle"}
-        onClick={handleToggle}
+        onClick={toggleTheme}
         className={cn(
           "relative flex h-[68px] w-[148px] items-center rounded-full border border-white/25 bg-black/20 p-[6px] text-white shadow-lg backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-wait",
           compact && "h-11 w-[92px] p-1",
