@@ -26,7 +26,7 @@ export function Accordion({ items }: { items: readonly AccordionItem[] }) {
               <span>{item.question}</span>
               <ChevronDown className={cn("size-5 shrink-0 transition-transform", isOpen && "rotate-180")} aria-hidden="true" />
             </button>
-            <div id={panelId} hidden={!isOpen} className="pb-6 pr-10 text-sm leading-7 text-muted sm:text-base">
+            <div id={panelId} hidden={!isOpen} className="whitespace-pre-line break-words pb-6 pr-10 text-sm leading-7 text-muted sm:text-base">
               {item.answer}
             </div>
           </div>
