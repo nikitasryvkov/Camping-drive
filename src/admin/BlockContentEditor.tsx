@@ -183,11 +183,13 @@ function FieldList({
               <textarea
                 id={fieldId}
                 rows={5}
+                aria-describedby={field.hint ? `${fieldId}-hint` : undefined}
                 maxLength={field.maxLength ?? 20_000}
                 value={toText(value[field.key])}
                 placeholder={field.placeholder}
                 onChange={(event) => setField(field.key, event.target.value)}
               />
+              {field.hint ? <small className="admin-field-hint" id={`${fieldId}-hint`}>{field.hint}</small> : null}
             </label>
           );
         }

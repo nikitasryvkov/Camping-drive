@@ -6,6 +6,7 @@ export type BlockField =
       key: string;
       label: string;
       placeholder?: string;
+      hint?: string;
       maxLength?: number;
       min?: number;
       max?: number;
@@ -309,7 +310,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
         defaultItem: { question: "Новый вопрос", answer: "" },
         fields: [
           { kind: "text", key: "question", label: "Вопрос" },
-          { kind: "textarea", key: "answer", label: "Ответ" },
+          { kind: "textarea", key: "answer", label: "Ответ", hint: "Enter — новая строка. Два Enter — пустая строка между абзацами. Переносы сохраняются на сайте." },
         ],
       },
     ],

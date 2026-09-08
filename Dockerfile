@@ -39,7 +39,9 @@ ARG VCS_REF=unverified
 LABEL org.opencontainers.image.revision="${VCS_REF}"
 
 USER root
-RUN apk del --no-network curl
+RUN apk del --no-network curl \
+  && apk add --no-cache --upgrade \
+    'libcrypto3>=3.5.8-r0' 'libssl3>=3.5.8-r0' 'libuuid>=2.41.6-r1'
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/security-headers.conf docker/proxy-params.conf /etc/nginx/
@@ -62,7 +64,8 @@ LABEL org.opencontainers.image.revision="${VCS_REF}"
 ENV NODE_ENV=production
 WORKDIR /app
 
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+RUN apk add --no-cache --upgrade 'libcrypto3>=3.5.8-r0' 'libssl3>=3.5.8-r0' \
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
     /opt/yarn-v1.22.22 \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
     /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg
