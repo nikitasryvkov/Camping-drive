@@ -39,7 +39,9 @@ ARG VCS_REF=unverified
 LABEL org.opencontainers.image.revision="${VCS_REF}"
 
 USER root
-RUN apk del --no-network curl
+RUN apk del --no-network curl \
+  && apk add --no-cache --upgrade \
+    'libcrypto3>=3.5.8-r0' 'libssl3>=3.5.8-r0' 'libuuid>=2.41.6-r1'
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/security-headers.conf docker/proxy-params.conf /etc/nginx/
