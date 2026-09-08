@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 
-FROM golang:1.26.5-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aabd498d0699ff5fb2 AS build
+FROM golang:1.26.8-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628 AS build
 
 WORKDIR /src
 
@@ -17,6 +17,7 @@ LABEL org.opencontainers.image.revision="${VCS_REF}"
 
 USER root
 RUN apk del --no-network curl \
+    && apk add --no-cache --upgrade 'libcrypto3>=3.5.8-r0' 'libssl3>=3.5.8-r0' \
     && addgroup -S -g 10001 caddy-runtime \
     && adduser -S -D -H -u 10001 -G caddy-runtime caddy-runtime \
     && chown -R caddy-runtime:caddy-runtime /data /config

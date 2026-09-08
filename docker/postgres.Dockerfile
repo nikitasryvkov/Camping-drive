@@ -5,6 +5,7 @@ FROM postgres:17-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441
 ARG VCS_REF=unverified
 LABEL org.opencontainers.image.revision="${VCS_REF}"
 
-RUN apk add --no-cache su-exec=0.3-r0 \
+RUN apk add --no-cache --upgrade su-exec=0.3-r0 \
+    'libcrypto3>=3.5.8-r0' 'libssl3>=3.5.8-r0' 'libuuid>=2.42.3-r1' \
   && sed -i 's/exec gosu postgres/exec su-exec postgres/' /usr/local/bin/docker-entrypoint.sh \
   && rm -f /usr/local/bin/gosu
